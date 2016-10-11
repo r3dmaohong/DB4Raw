@@ -13,6 +13,7 @@ str(people)
 
 
 ##Mutate new col...
+##Accumulated experience...
 people$工作結束時間 <- as.Date(people$工作結束時間)
 people$工作開始時間 <- as.Date(people$工作開始時間)
 
