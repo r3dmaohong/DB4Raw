@@ -23,7 +23,7 @@ people$工作結束時間[people$工作結束時間=="在職中"] <- format(Sys.Date(), "%Y/%m/
 people$工作結束時間 <- as.Date(people$工作結束時間)
 people$工作開始時間 <- as.Date(people$工作開始時間)
 
-#people <- people %>% mutate(工作時段 = (as.numeric(工作結束時間 - 工作開始時間)/365) )
+#people <- people %>% mutate(工作時段 = (as.numeric(工作結束時間 - 工作開始時間)/365))
 people[,工作時段 := (as.numeric(工作結束時間 - 工作開始時間)/365), ]
 people[,職務小類總年資 := sum(工作時段), by=.(履歷編號, 職務小類名稱)]
 #people <- people %>% group_by(履歷編號, 職務小類名稱) %>% mutate(職務小類總年資 = sum(工作時段))
