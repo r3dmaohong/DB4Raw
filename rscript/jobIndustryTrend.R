@@ -72,53 +72,63 @@ total.data$date <- total.data$date %>% substr(., 1, 5)
 total.data$date <- as.integer(total.data$date)
 total.data$date <- total.data$date - 1
 
-#top25demand.job <- total.data %>% filter(., 職務小類名稱!="工讀生") %>% group_by(date, area.work, 職務小類名稱) %>% 
+#top25_DemandJob <- total.data %>% filter(., 職務小類名稱!="工讀生") %>% group_by(date, area.work, 職務小類名稱) %>% 
 #  summarize(.,Freq=n()) %>% arrange(.,date, area.work, -Freq) 
-top25demand.job <- total.data[ 職務小類名稱!="工讀生", .N, by = .(date, area.work, 職務小類名稱)]
-top25demand.job <- top25demand.job[order(date, area.work, -N)]
-top25demand.job[, percentage:=N/sum(N), by=.(date, area.work)]
-#top25demand.job <- top25demand.job %>% group_by(., date, area.work) %>% mutate(., percentage=Freq/sum(Freq))
-unique(top25demand.job$area.work)
+top25_DemandJob <- total.data[ 職務小類名稱!="工讀生", .N, by = .(date, area.work, 職務小類名稱)]
+top25_DemandJob <- top25_DemandJob[order(date, area.work, -N)]
+top25_DemandJob[, percentage:=N/sum(N), by=.(date, area.work)]
+#top25_DemandJob <- top25_DemandJob %>% group_by(., date, area.work) %>% mutate(., percentage=Freq/sum(Freq))
+unique(top25_DemandJob$area.work)
+
+##Backup 
+totalDemandJob <- top25_DemandJob
 
 ##change freq to a new standard
-standard.top25demand.job <- top25demand.job[date==top25demand.job$date[1]]
-#standard.top25demand.job <- top25demand.job %>% filter(., date==top25demand.job$date[1])
-top25demand.job <- top25demand.job[, head(.SD, 25), by=.(date, area.work)]
-#top25demand.job <- top25demand.job %>% group_by(date, area.work) %>% top_n(n = 25)
-top25demand.job$Freq <- sapply(1:nrow(top25demand.job), function(x){
-  top25demand.job$N[x] - standard.top25demand.job$N[which(standard.top25demand.job$職務小類名稱==top25demand.job$職務小類名稱[x] & standard.top25demand.job$area.work==top25demand.job$area.work[x])]
+standard.top25_DemandJob <- top25_DemandJob[date==top25_DemandJob$date[1]]
+#standard.top25_DemandJob <- top25_DemandJob %>% filter(., date==top25_DemandJob$date[1])
+top25_DemandJob <- top25_DemandJob[, head(.SD, 25), by=.(date, area.work)]
+#top25_DemandJob <- top25_DemandJob %>% group_by(date, area.work) %>% top_n(n = 25)
+top25_DemandJob$Freq <- sapply(1:nrow(top25_DemandJob), function(x){
+  top25_DemandJob$N[x] - standard.top25_DemandJob$N[which(standard.top25_DemandJob$職務小類名稱==top25_DemandJob$職務小類名稱[x] & standard.top25_DemandJob$area.work==top25_DemandJob$area.work[x])]
 })
 
-
-
 ##Set ranking
-top25demand.job$rank <-  0
+top25_DemandJob$rank <-  0
 countdown <- 0
-for(i in 1:nrow(top25demand.job)){
+for(i in 1:nrow(top25_DemandJob)){
   if(i==1){
-    top25demand.job$rank[i] <- 1
+    top25_DemandJob$rank[i] <- 1
   }else{
-    if(top25demand.job$area.work[i]==top25demand.job$area.work[i-1]){
-      if(top25demand.job$percentage [i]==top25demand.job$percentage [i-1]){
-        top25demand.job$rank[i] <- top25demand.job$rank[i-1]
+    if(top25_DemandJob$area.work[i]==top25_DemandJob$area.work[i-1]){
+      if(top25_DemandJob$percentage [i]==top25_DemandJob$percentage [i-1]){
+        top25_DemandJob$rank[i] <- top25_DemandJob$rank[i-1]
         countdown <- countdown + 1
       }else{
-        top25demand.job$rank[i] <- top25demand.job$rank[i-1] + 1 + countdown
+        top25_DemandJob$rank[i] <- top25_DemandJob$rank[i-1] + 1 + countdown
         countdown <- 0
       }      
     }else{
-      top25demand.job$rank[i] <- 1
+      top25_DemandJob$rank[i] <- 1
       countdown <- 0
     }
   } 
 }
 
-top25demand.job$percentage <- paste0(format(round(top25demand.job$percentage*100,2), nsmall=2), "%")
+top25_DemandJob$percentage <- paste0(format(round(top25_DemandJob$percentage*100,2), nsmall=2), "%")
 
-##Rank, Area, Percentage, Freq
+##Rank, Area, Job, Percentage, Freq
+##保留最新那月
+top25_DemandJob[,.(rank, area.work, 職務小類名稱, percentage, Freq)]
 
 ##Historical changes...
-write.csv(top25demand.job, paste0("output\\per.month\\",gsub("[:punct:]","_", Sys.time()),"_top25demand.job.csv"), row.names=F)
+#歷史變化要從中間資料撈
+totalDemandJob
+
+write.csv(top25_DemandJob, paste0("output\\per.month\\",gsub("[:punct:]","_", Sys.time()),"_top25_DemandJob.csv"), row.names=F)
+
+
+
+
 
 
 ###################################################
