@@ -51,27 +51,30 @@ total.data <- total.data[ 職缺屬性=="全職" | 職缺屬性=="中高階" ] # %>% filter(.
 
 ## Working area transfer
 total.data$area.work <- ""
-North <- c("台北市","新北市","基隆市","桃園市","桃園縣","新竹市","新竹縣")
-Mid   <- c("苗栗縣","台中市","彰化縣","南投縣","雲林縣")
-South <- c("嘉義縣","嘉義市","台南市","高雄市","屏東縣")
-East  <- c("宜蘭縣","花蓮縣","台東縣","澎湖縣","金門縣","連江縣")
+North <- c("台北", "新北", "基隆", "桃園", "新竹")
+Mid   <- c("苗栗", "台中", "彰化", "南投", "雲林")
+South <- c("嘉義", "台南", "高雄", "屏東")
+East  <- c("宜蘭", "花蓮", "台東", "澎湖", "金門", "連江")
 Out   <- c(North, Mid, South, East)
-total.data[ substr(total.data[,工作地點],1,3) %in% North, area.work:="北部地區"]
-total.data[ substr(total.data[,工作地點],1,3) %in% Mid, area.work:="中部地區"]
-total.data[ substr(total.data[,工作地點],1,3) %in% South, area.work:="南部地區"]
-total.data[ substr(total.data[,工作地點],1,3) %in% East, area.work:="東部與離島地區"]
-total.data[ !(substr(total.data[,工作地點],1,3) %in% Out) , area.work:="非台灣地區"]
+total.data[ substr(total.data[,工作地點],1,2) %in% North, area.work:="北部地區"]
+total.data[ substr(total.data[,工作地點],1,2) %in% Mid, area.work:="中部地區"]
+total.data[ substr(total.data[,工作地點],1,2) %in% South, area.work:="南部地區"]
+total.data[ substr(total.data[,工作地點],1,2) %in% East, area.work:="東部與離島地區"]
+total.data[ !(substr(total.data[,工作地點],1,2) %in% Out) , area.work:="非台灣地區"]
 
 unique(total.data$area.work)
 ## Check areas which are outside Taiwan
 total.data[ !(substr(total.data[,工作地點],1,3) %in% Out) , 工作地點] %>% substr(., 1, 3) %>% table
 
-## Top 25 Demanded Jobs
 total.data$date %>% unique
 total.data$date <- total.data$date %>% substr(., 1, 5)
 total.data$date <- as.integer(total.data$date)
 total.data$date <- total.data$date - 1
 
+#不動產經紀人 => 不動產經紀人/營業員
+total.data$職務小類名稱[total.data$職務小類名稱=="不動產經紀人"] <- "不動產經紀人/營業員"
+
+## Top 25 Demanded Jobs
 #top25_DemandJob <- total.data %>% filter(., 職務小類名稱!="工讀生") %>% group_by(date, area.work, 職務小類名稱) %>% 
 #  summarize(.,Freq=n()) %>% arrange(.,date, area.work, -Freq) 
 top25_DemandJob <- total.data[ 職務小類名稱!="工讀生", .N, by = .(date, area.work, 職務小類名稱)]
@@ -115,21 +118,34 @@ for(i in 1:nrow(top25_DemandJob)){
 }
 
 top25_DemandJob$percentage <- paste0(format(round(top25_DemandJob$percentage*100,2), nsmall=2), "%")
-
-##Rank, Area, Job, Percentage, Freq
-##保留最新那月
-top25_DemandJob[,.(rank, area.work, 職務小類名稱, percentage, Freq)]
+#Generate index
+top25_DemandJob[,index:=paste(area.work, 職務小類名稱, sep="_")]
 
 ##Historical changes...
-#歷史變化要從中間資料撈
-totalDemandJob
+totalDemandJob$Freq <- sapply(1:nrow(totalDemandJob), function(x){
+  if(standard.top25_DemandJob$N[which(standard.top25_DemandJob$職務小類名稱==totalDemandJob$職務小類名稱[x] & standard.top25_DemandJob$area.work==totalDemandJob$area.work[x])] %>% toString != ""){
+    return(totalDemandJob$N[x] - standard.top25_DemandJob$N[which(standard.top25_DemandJob$職務小類名稱==totalDemandJob$職務小類名稱[x] & standard.top25_DemandJob$area.work==totalDemandJob$area.work[x])])
+  }
+  return(0)
+})
+totalDemandJob[,index:=paste(area.work, 職務小類名稱, sep="_")]
+top25_DemandJob <- top25_DemandJob[date==max(date)]
+##Rank, Area, Job, Percentage, Freq
+##Keep the latest data
+OutputDemandJob <- top25_DemandJob[, .(rank, area.work, 職務小類名稱, percentage, Freq)]
+##Output of %in% is wrong
+totalDemandJob <- totalDemandJob[index %in% top25_DemandJob$index, ]
 
-write.csv(top25_DemandJob, paste0("output\\per.month\\",gsub("[:punct:]","_", Sys.time()),"_top25_DemandJob.csv"), row.names=F)
+##Check
+tmp <- totalDemandJob[top25_DemandJob$index %in% index, index] %>% table %>% data.frame
+stopifnot(tmp$Freq %>% unique %>% length ==1)
+#tmp$.[tmp$Freq==min(tmp$Freq %>% unique)] %>% unique
+##不動產經紀人 => 不動產經紀人/營業員
+totalDemandJob <- totalDemandJob[, .(date, area.work, 職務小類名稱, Freq)]
+#apply(totalDemandJob, 2, class)
 
-
-
-
-
+write.csv(OutputDemandJob, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d"), "_OutputDemandJob.csv"), row.names=F)
+write.csv(totalDemandJob, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d"), "_totalDemandJob.csv"), row.names=F)
 
 ###################################################
 ###################################################
