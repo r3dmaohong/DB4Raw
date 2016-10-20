@@ -63,8 +63,8 @@ total.data[ substr(total.data[,¤u§@¦aÂI],1,2) %in% East, area.work:="ªF³¡»PÂ÷®q¦
 total.data[ !(substr(total.data[,¤u§@¦aÂI],1,2) %in% Out) , area.work:="«D¥xÆW¦a°Ï"]
 
 unique(total.data$area.work)
-## Check areas which are outside Taiwan
-total.data[ !(substr(total.data[,¤u§@¦aÂI],1,3) %in% Out) , ¤u§@¦aÂI] %>% substr(., 1, 3) %>% table
+##Check areas which are outside Taiwan
+total.data[ area.work=="«D¥xÆW¦a°Ï" , ¤u§@¦aÂI] %>% substr(., 1, 3) %>% table
 
 total.data$date %>% unique
 total.data$date <- total.data$date %>% substr(., 1, 5)
@@ -75,77 +75,79 @@ total.data$date <- total.data$date - 1
 total.data$Â¾°È¤pÃþ¦WºÙ[total.data$Â¾°È¤pÃþ¦WºÙ=="¤£°Ê²£¸g¬ö¤H"] <- "¤£°Ê²£¸g¬ö¤H/Àç·~­û"
 
 ## Top 25 Demanded Jobs
-#top25_DemandJob <- total.data %>% filter(., Â¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í") %>% group_by(date, area.work, Â¾°È¤pÃþ¦WºÙ) %>% 
-#  summarize(.,Freq=n()) %>% arrange(.,date, area.work, -Freq) 
-top25_DemandJob <- total.data[ Â¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í", .N, by = .(date, area.work, Â¾°È¤pÃþ¦WºÙ)]
-top25_DemandJob <- top25_DemandJob[order(date, area.work, -N)]
-top25_DemandJob[, percentage:=N/sum(N), by=.(date, area.work)]
-#top25_DemandJob <- top25_DemandJob %>% group_by(., date, area.work) %>% mutate(., percentage=Freq/sum(Freq))
-unique(top25_DemandJob$area.work)
-
-##Backup 
-totalDemandJob <- top25_DemandJob
-
-##change freq to a new standard
-standard.top25_DemandJob <- top25_DemandJob[date==top25_DemandJob$date[1]]
-#standard.top25_DemandJob <- top25_DemandJob %>% filter(., date==top25_DemandJob$date[1])
-top25_DemandJob <- top25_DemandJob[, head(.SD, 25), by=.(date, area.work)]
-#top25_DemandJob <- top25_DemandJob %>% group_by(date, area.work) %>% top_n(n = 25)
-top25_DemandJob$Freq <- sapply(1:nrow(top25_DemandJob), function(x){
-  top25_DemandJob$N[x] - standard.top25_DemandJob$N[which(standard.top25_DemandJob$Â¾°È¤pÃþ¦WºÙ==top25_DemandJob$Â¾°È¤pÃþ¦WºÙ[x] & standard.top25_DemandJob$area.work==top25_DemandJob$area.work[x])]
-})
-
-##Set ranking
-top25_DemandJob$rank <-  0
-countdown <- 0
-for(i in 1:nrow(top25_DemandJob)){
-  if(i==1){
-    top25_DemandJob$rank[i] <- 1
-  }else{
-    if(top25_DemandJob$area.work[i]==top25_DemandJob$area.work[i-1]){
-      if(top25_DemandJob$percentage [i]==top25_DemandJob$percentage [i-1]){
-        top25_DemandJob$rank[i] <- top25_DemandJob$rank[i-1]
-        countdown <- countdown + 1
-      }else{
-        top25_DemandJob$rank[i] <- top25_DemandJob$rank[i-1] + 1 + countdown
-        countdown <- 0
-      }      
-    }else{
+if(T){
+  #top25_DemandJob <- total.data %>% filter(., Â¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í") %>% group_by(date, area.work, Â¾°È¤pÃþ¦WºÙ) %>% 
+  #  summarize(.,Freq=n()) %>% arrange(.,date, area.work, -Freq) 
+  top25_DemandJob <- total.data[ Â¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í", .N, by = .(date, area.work, Â¾°È¤pÃþ¦WºÙ)]
+  top25_DemandJob <- top25_DemandJob[order(date, area.work, -N)]
+  top25_DemandJob[, percentage:=N/sum(N), by=.(date, area.work)]
+  #top25_DemandJob <- top25_DemandJob %>% group_by(., date, area.work) %>% mutate(., percentage=Freq/sum(Freq))
+  unique(top25_DemandJob$area.work)
+  
+  ##Backup 
+  totalDemandJob <- top25_DemandJob
+  
+  ##change freq to a new standard
+  standard.top25_DemandJob <- top25_DemandJob[date==top25_DemandJob$date[1]]
+  #standard.top25_DemandJob <- top25_DemandJob %>% filter(., date==top25_DemandJob$date[1])
+  top25_DemandJob <- top25_DemandJob[, head(.SD, 25), by=.(date, area.work)]
+  #top25_DemandJob <- top25_DemandJob %>% group_by(date, area.work) %>% top_n(n = 25)
+  top25_DemandJob$Freq <- sapply(1:nrow(top25_DemandJob), function(x){
+    top25_DemandJob$N[x] - standard.top25_DemandJob$N[which(standard.top25_DemandJob$Â¾°È¤pÃþ¦WºÙ==top25_DemandJob$Â¾°È¤pÃþ¦WºÙ[x] & standard.top25_DemandJob$area.work==top25_DemandJob$area.work[x])]
+  })
+  
+  ##Set ranking
+  top25_DemandJob$rank <-  0
+  countdown <- 0
+  for(i in 1:nrow(top25_DemandJob)){
+    if(i==1){
       top25_DemandJob$rank[i] <- 1
-      countdown <- 0
-    }
-  } 
-}
-
-top25_DemandJob$percentage <- paste0(format(round(top25_DemandJob$percentage*100,2), nsmall=2), "%")
-#Generate index
-top25_DemandJob[,index:=paste(area.work, Â¾°È¤pÃþ¦WºÙ, sep="_")]
-
-##Historical changes...
-totalDemandJob$Freq <- sapply(1:nrow(totalDemandJob), function(x){
-  if(standard.top25_DemandJob$N[which(standard.top25_DemandJob$Â¾°È¤pÃþ¦WºÙ==totalDemandJob$Â¾°È¤pÃþ¦WºÙ[x] & standard.top25_DemandJob$area.work==totalDemandJob$area.work[x])] %>% toString != ""){
-    return(totalDemandJob$N[x] - standard.top25_DemandJob$N[which(standard.top25_DemandJob$Â¾°È¤pÃþ¦WºÙ==totalDemandJob$Â¾°È¤pÃþ¦WºÙ[x] & standard.top25_DemandJob$area.work==totalDemandJob$area.work[x])])
+    }else{
+      if(top25_DemandJob$area.work[i]==top25_DemandJob$area.work[i-1]){
+        if(top25_DemandJob$percentage [i]==top25_DemandJob$percentage [i-1]){
+          top25_DemandJob$rank[i] <- top25_DemandJob$rank[i-1]
+          countdown <- countdown + 1
+        }else{
+          top25_DemandJob$rank[i] <- top25_DemandJob$rank[i-1] + 1 + countdown
+          countdown <- 0
+        }      
+      }else{
+        top25_DemandJob$rank[i] <- 1
+        countdown <- 0
+      }
+    } 
   }
-  return(0)
-})
-totalDemandJob[,index:=paste(area.work, Â¾°È¤pÃþ¦WºÙ, sep="_")]
-top25_DemandJob <- top25_DemandJob[date==max(date)]
-##Rank, Area, Job, Percentage, Freq
-##Keep the latest data
-OutputDemandJob <- top25_DemandJob[, .(rank, area.work, Â¾°È¤pÃþ¦WºÙ, percentage, Freq)]
-##Output of %in% is wrong
-totalDemandJob <- totalDemandJob[index %in% top25_DemandJob$index, ]
-
-##Check
-tmp <- totalDemandJob[top25_DemandJob$index %in% index, index] %>% table %>% data.frame
-stopifnot(tmp$Freq %>% unique %>% length ==1)
-#tmp$.[tmp$Freq==min(tmp$Freq %>% unique)] %>% unique
-##¤£°Ê²£¸g¬ö¤H => ¤£°Ê²£¸g¬ö¤H/Àç·~­û
-totalDemandJob <- totalDemandJob[, .(date, area.work, Â¾°È¤pÃþ¦WºÙ, Freq)]
-#apply(totalDemandJob, 2, class)
-
-write.csv(OutputDemandJob, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d"), "_OutputDemandJob.csv"), row.names=F)
-write.csv(totalDemandJob, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d"), "_totalDemandJob.csv"), row.names=F)
+  
+  top25_DemandJob$percentage <- paste0(format(round(top25_DemandJob$percentage*100,2), nsmall=2), "%")
+  #Generate index
+  top25_DemandJob[,index:=paste(area.work, Â¾°È¤pÃþ¦WºÙ, sep="_")]
+  
+  ##Historical changes...
+  totalDemandJob$Freq <- sapply(1:nrow(totalDemandJob), function(x){
+    if(standard.top25_DemandJob$N[which(standard.top25_DemandJob$Â¾°È¤pÃþ¦WºÙ==totalDemandJob$Â¾°È¤pÃþ¦WºÙ[x] & standard.top25_DemandJob$area.work==totalDemandJob$area.work[x])] %>% toString != ""){
+      return(totalDemandJob$N[x] - standard.top25_DemandJob$N[which(standard.top25_DemandJob$Â¾°È¤pÃþ¦WºÙ==totalDemandJob$Â¾°È¤pÃþ¦WºÙ[x] & standard.top25_DemandJob$area.work==totalDemandJob$area.work[x])])
+    }
+    return(0)
+  })
+  totalDemandJob[,index:=paste(area.work, Â¾°È¤pÃþ¦WºÙ, sep="_")]
+  top25_DemandJob <- top25_DemandJob[date==max(date)]
+  ##Rank, Area, Job, Percentage, Freq
+  ##Keep the latest data
+  OutputDemandJob <- top25_DemandJob[, .(rank, area.work, Â¾°È¤pÃþ¦WºÙ, percentage, Freq)]
+  ##Output of %in% is wrong
+  totalDemandJob <- totalDemandJob[index %in% top25_DemandJob$index, ]
+  
+  ##Check
+  tmp <- totalDemandJob[top25_DemandJob$index %in% index, index] %>% table %>% data.frame
+  stopifnot(tmp$Freq %>% unique %>% length ==1)
+  #tmp$.[tmp$Freq==min(tmp$Freq %>% unique)] %>% unique
+  ##¤£°Ê²£¸g¬ö¤H => ¤£°Ê²£¸g¬ö¤H/Àç·~­û
+  totalDemandJob <- totalDemandJob[, .(date, area.work, Â¾°È¤pÃþ¦WºÙ, Freq)]
+  #apply(totalDemandJob, 2, class)
+  
+  write.csv(OutputDemandJob, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d"), "_OutputDemandJob.csv"), row.names=F)
+  write.csv(totalDemandJob, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d"), "_totalDemandJob.csv"), row.names=F)
+}
 
 ###################################################
 ###################################################
@@ -153,66 +155,72 @@ write.csv(totalDemandJob, paste0("output\\per.month\\", format(Sys.time(), "%Y%m
 ###################################################
 ###################################################
 
-# Supply
+##Resume: Supply
 ##Import all files.
-files <- list.files(file.path('per.month','¨DÂ¾'),full.names = TRUE)
-files <- files[grepl("csv", files)]
+files <- list.files(file.path("per.month", "¨DÂ¾"), full.names = TRUE)
+files <- files[grepl(".csv", files, fixed=TRUE)]
 ##Import files
 files.lists <- pblapply(files,function(file.name){
   file.list <- fread(file.name)
   date <- unlist(strsplit(file.name, "/"))[length(unlist(strsplit(file.name, "/")))] %>% gsub("[A-z.]", "", .) ##%>% substr(., 1, 7)
-  file.list <- cbind(file.list, date)
+  file.list$date <- date
+  #file.list <- cbind(file.list, date)
   return(file.list)
 })
 
-
 ##Combine all the lists into data frame.
-total.data <- do.call(rbind,files.lists)
-setDF(total.data)
+totalResumeData <- do.call(rbind,files.lists)
 rm(files.lists,files)
-dim(total.data)
-str(total.data)
-names(total.data)
-total.data <- total.data[,unique(names(total.data))]
+dim(totalResumeData)
+str(totalResumeData)
+names(totalResumeData)
 
-## Top 10 most beloved jobs
-total.data$§Æ±æ¤u§@©Ê½è %>% table
-total.data <- total.data %>% filter(., §Æ±æ¤u§@©Ê½è=="¥þÂ¾" | §Æ±æ¤u§@©Ê½è=="¤¤°ª¶¥")
+totalResumeData$§Æ±æ¤u§@©Ê½è %>% table
+totalResumeData <- totalResumeData[§Æ±æ¤u§@©Ê½è=="¥þÂ¾" | §Æ±æ¤u§@©Ê½è=="¤¤°ª¶¥",]
 
-## Working area transfer
-total.data$area.work <- NA
-"¥_³¡¦a°Ï"       -> total.data[which(substr(total.data[,"§Æ±æ¤W¯Z¦a°Ï¦WºÙ"],1,3) %in% c("¥x¥_¥«","·s¥_¥«","°ò¶©¥«","®ç¶é¥«","®ç¶é¿¤","·s¦Ë¥«","·s¦Ë¿¤")),"area.work"]
-"¤¤³¡¦a°Ï"       -> total.data[which(substr(total.data[,"§Æ±æ¤W¯Z¦a°Ï¦WºÙ"],1,3) %in% c("­]®ß¿¤","¥x¤¤¥«","¹ü¤Æ¿¤","«n§ë¿¤","¶³ªL¿¤")),"area.work"]
-"«n³¡¦a°Ï"       -> total.data[which(substr(total.data[,"§Æ±æ¤W¯Z¦a°Ï¦WºÙ"],1,3) %in% c("¹Å¸q¿¤","¹Å¸q¥«","¥x«n¥«","°ª¶¯¥«","«ÌªF¿¤")),"area.work"]
-"ªF³¡»PÂ÷®q¦a°Ï" -> total.data[which(substr(total.data[,"§Æ±æ¤W¯Z¦a°Ï¦WºÙ"],1,3) %in% c("©yÄõ¿¤","ªá½¬¿¤","¥xªF¿¤","¼ê´ò¿¤","ª÷ªù¿¤","³s¦¿¿¤")),"area.work"]
-"«D¥xÆW¦a°Ï"     -> total.data[which(substr(total.data[,"§Æ±æ¤W¯Z¦a°Ï¦WºÙ"],1,3) %in% c("¥x¥_¥«","·s¥_¥«","°ò¶©¥«","®ç¶é¥«","®ç¶é¿¤","·s¦Ë¥«","·s¦Ë¿¤",
-                                                                       "­]®ß¿¤","¥x¤¤¥«","¹ü¤Æ¿¤","«n§ë¿¤","¶³ªL¿¤", 
-                                                                       "¹Å¸q¿¤","¹Å¸q¥«","¥x«n¥«","°ª¶¯¥«","«ÌªF¿¤", 
-                                                                       "©yÄõ¿¤","ªá½¬¿¤","¥xªF¿¤","¼ê´ò¿¤","ª÷ªù¿¤","³s¦¿¿¤")==FALSE),"area.work"]
+##Working area transferation
+totalResumeData$area.work <- ""
+totalResumeData[ substr(totalResumeData[,§Æ±æ¤W¯Z¦a°Ï¦WºÙ],1,2) %in% North, area.work:="¥_³¡¦a°Ï"]
+totalResumeData[ substr(totalResumeData[,§Æ±æ¤W¯Z¦a°Ï¦WºÙ],1,2) %in% Mid, area.work:="¤¤³¡¦a°Ï"]
+totalResumeData[ substr(totalResumeData[,§Æ±æ¤W¯Z¦a°Ï¦WºÙ],1,2) %in% South, area.work:="«n³¡¦a°Ï"]
+totalResumeData[ substr(totalResumeData[,§Æ±æ¤W¯Z¦a°Ï¦WºÙ],1,2) %in% East, area.work:="ªF³¡»PÂ÷®q¦a°Ï"]
+totalResumeData[ !(substr(totalResumeData[,§Æ±æ¤W¯Z¦a°Ï¦WºÙ],1,2) %in% Out) , area.work:="«D¥xÆW¦a°Ï"]
+
+unique(totalResumeData$area.work)
 ## Check areas which are outside Taiwan
-total.data[which(substr(total.data[,"§Æ±æ¤W¯Z¦a°Ï¦WºÙ"],1,3) %in% c("¥x¥_¥«","·s¥_¥«","°ò¶©¥«","®ç¶é¥«","®ç¶é¿¤","·s¦Ë¥«","·s¦Ë¿¤",
-                                                        "­]®ß¿¤","¥x¤¤¥«","¹ü¤Æ¿¤","«n§ë¿¤","¶³ªL¿¤", 
-                                                        "¹Å¸q¿¤","¹Å¸q¥«","¥x«n¥«","°ª¶¯¥«","«ÌªF¿¤", 
-                                                        "©yÄõ¿¤","ªá½¬¿¤","¥xªF¿¤","¼ê´ò¿¤","ª÷ªù¿¤","³s¦¿¿¤")==FALSE),"§Æ±æ¤W¯Z¦a°Ï¦WºÙ"] %>% table
+totalResumeData[ area.work=="«D¥xÆW¦a°Ï" , §Æ±æ¤W¯Z¦a°Ï¦WºÙ] %>% substr(., 1, 3) %>% table
 
+###########################
+##Top 10 most beloved jobs
+###########################
 ## Top 10 most beloved jobs
 ## Top 25 Demanded Jobs
-total.data$date %>% unique
-total.data$date <- total.data$date %>% substr(., 1, 5)
-total.data$date <- as.integer(total.data$date)
-total.data$date <- total.data$date - 1
+totalResumeData$date %>% unique
+totalResumeData$date <- totalResumeData$date %>% substr(., 1, 5)
+totalResumeData$date <- as.integer(totalResumeData$date)
+totalResumeData$date <- totalResumeData$date - 1
 
-top10beloved.job <- total.data %>% filter(., §Æ±æÂ¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í") %>% group_by(date, area.work, §Æ±æÂ¾°È¤pÃþ¦WºÙ) %>% 
-  summarize(.,Freq=n()) %>% arrange(.,date, area.work, -Freq) 
-top10beloved.job <- top10beloved.job %>% group_by(., date, area.work) %>% mutate(., percentage=Freq/sum(Freq))
+top10beloved.job <- totalResumeData[§Æ±æÂ¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í", .N, by=.(date, area.work, §Æ±æÂ¾°È¤pÃþ¦WºÙ)]
+top10beloved.job <- top10beloved.job[order(date, area.work, -N),]
+top10beloved.job[, percentage:=N/sum(N), by=.(date, area.work)]
 unique(top10beloved.job$area.work)
 
-##change freq to a new standard
-standard.top10beloved.job <- top10beloved.job %>% filter(., date==top10beloved.job$date[1])
-top10beloved.job <- top10beloved.job %>% group_by(date,area.work) %>% top_n(n = 10)
+##Backup
+totalBelovedJob <- top10beloved.job
+
+##Change freq to a new standard
+standard.top10beloved.job <- top10beloved.job[date==top10beloved.job$date[1]]
+top10beloved.job <- top10beloved.job[, head(.SD, 10), by=.(date, area.work)]
 top10beloved.job$Freq <- sapply(1:nrow(top10beloved.job), function(x){
-  top10beloved.job$Freq[x] - standard.top10beloved.job$Freq[which(standard.top10beloved.job$§Æ±æÂ¾°È¤pÃþ¦WºÙ==top10beloved.job$§Æ±æÂ¾°È¤pÃþ¦WºÙ[x] & standard.top10beloved.job$area.work==top10beloved.job$area.work[x])]
+  if(standard.top10beloved.job$N[which(standard.top10beloved.job$§Æ±æÂ¾°È¤pÃþ¦WºÙ==top10beloved.job$§Æ±æÂ¾°È¤pÃþ¦WºÙ[x] & standard.top10beloved.job$area.work==top10beloved.job$area.work[x])] %>% toString != ""){
+    return(top10beloved.job$N[x] - standard.top10beloved.job$N[which(standard.top10beloved.job$§Æ±æÂ¾°È¤pÃþ¦WºÙ==top10beloved.job$§Æ±æÂ¾°È¤pÃþ¦WºÙ[x] & standard.top10beloved.job$area.work==top10beloved.job$area.work[x])])
+  }
+  ##Add missing standard
+  standard.top10beloved.job <<- rbind(standard.top10beloved.job, data.table(date=standard.top10beloved.job$date[1], area.work=top10beloved.job$area.work[x], §Æ±æÂ¾°È¤pÃþ¦WºÙ=top10beloved.job$§Æ±æÂ¾°È¤pÃþ¦WºÙ[x], N=0, percentage=0))
+  return(top10beloved.job$N[x])
 })
+
+###RIGHT HERE...
 
 ##Set ranking
 top10beloved.job$rank <-  NA
@@ -245,12 +253,12 @@ dpt.match <- read.csv("1111¾Ç¸s¾Çªù¾ÇÃþ-20160617-1.csv", stringsAsFactors=F)
 for(i in 1:ncol(dpt.match)){
   dpt.match[,i] <- gsub("[0-9+_]", "", dpt.match[,i])
 }
-total.data$dpt <- ""
+totalResumeData$dpt <- ""
 for(i in 1:nrow(dpt.match)){
-  total.data$dpt[which(total.data$³Ì°ª¾Ç¾ú_¬ì¨t¤pÃþ¦WºÙ==dpt.match[i,3])] <- dpt.match[i,2]
+  totalResumeData$dpt[which(totalResumeData$³Ì°ª¾Ç¾ú_¬ì¨t¤pÃþ¦WºÙ==dpt.match[i,3])] <- dpt.match[i,2]
 }
 
-dpt.top10beloved.job <- total.data %>% filter(., §Æ±æÂ¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í") %>% group_by(date, dpt, §Æ±æÂ¾°È¤pÃþ¦WºÙ) %>% 
+dpt.top10beloved.job <- totalResumeData %>% filter(., §Æ±æÂ¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í") %>% group_by(date, dpt, §Æ±æÂ¾°È¤pÃþ¦WºÙ) %>% 
   summarize(.,Freq=n()) %>% arrange(.,date, -Freq) 
 dpt.top10beloved.job <- dpt.top10beloved.job %>% filter(., dpt!="")
 dpt.top10beloved.job <- dpt.top10beloved.job %>% group_by(., date, dpt) %>% mutate(., percentage=Freq/sum(Freq))
@@ -295,7 +303,7 @@ write.csv(dpt.top10beloved.job, paste0("output\\per.month\\",gsub("[:punct:]","_
 
 ##
 ##¦a°Ï¬O§_­n¦A°µ³B²z
-top10beloved.area <- total.data %>% filter(., §Æ±æÂ¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í") %>% mutate(., §Æ±æ¤W¯Z¦a°Ï¦WºÙ=substr(§Æ±æ¤W¯Z¦a°Ï¦WºÙ, 1, 3)) %>% group_by(date, §Æ±æ¤W¯Z¦a°Ï¦WºÙ) %>% 
+top10beloved.area <- totalResumeData %>% filter(., §Æ±æÂ¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í") %>% mutate(., §Æ±æ¤W¯Z¦a°Ï¦WºÙ=substr(§Æ±æ¤W¯Z¦a°Ï¦WºÙ, 1, 3)) %>% group_by(date, §Æ±æ¤W¯Z¦a°Ï¦WºÙ) %>% 
   summarize(.,Freq=n()) %>% arrange(.,date, -Freq) 
 top10beloved.area <- top10beloved.area %>% group_by(., date) %>% mutate(., percentage=Freq/sum(Freq))
 
@@ -334,7 +342,7 @@ write.csv(top10beloved.area, paste0("output\\per.month\\",gsub("[:punct:]","_", 
 
 ##dpt.top10beloved.area
 ##¦a°Ï¬O§_­n¦A°µ³B²z
-dpt.top10beloved.area <- total.data %>% filter(., §Æ±æÂ¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í") %>% mutate(., §Æ±æ¤W¯Z¦a°Ï¦WºÙ=substr(§Æ±æ¤W¯Z¦a°Ï¦WºÙ, 1, 3)) %>% group_by(date, dpt, §Æ±æ¤W¯Z¦a°Ï¦WºÙ) %>% 
+dpt.top10beloved.area <- totalResumeData %>% filter(., §Æ±æÂ¾°È¤pÃþ¦WºÙ!="¤uÅª¥Í") %>% mutate(., §Æ±æ¤W¯Z¦a°Ï¦WºÙ=substr(§Æ±æ¤W¯Z¦a°Ï¦WºÙ, 1, 3)) %>% group_by(date, dpt, §Æ±æ¤W¯Z¦a°Ï¦WºÙ) %>% 
   summarize(.,Freq=n()) %>% arrange(.,date, -Freq) 
 dpt.top10beloved.area <- dpt.top10beloved.area %>% filter(., dpt!="")
 dpt.top10beloved.area <- dpt.top10beloved.area %>% group_by(., date, dpt) %>% mutate(., percentage=Freq/sum(Freq))
@@ -400,17 +408,17 @@ for(i in 1:length(files.lists)){
 }
 
 ##Combine all the lists into data frame.
-total.data <- do.call(rbind.fill,files.lists)
-setDF(total.data)
+totalResumeData <- do.call(rbind.fill,files.lists)
+setDF(totalResumeData)
 rm(files.lists,files)
-dim(total.data)
-str(total.data)
-names(total.data)
-total.data <- total.data[,unique(names(total.data))]
+dim(totalResumeData)
+str(totalResumeData)
+names(totalResumeData)
+totalResumeData <- totalResumeData[,unique(names(totalResumeData))]
 ##
 ##¸ê®Æ®É¶¡ ¦a²z°Ï°ì  ·s_1111¦æ·~¤¤Ãþ¦WºÙ
 ## Top 10 most beloved jobs
-demand_job_data <- total.data %>% select(¸ê®Æ®É¶¡, ID1111Â¾°È¤pÃþ¦WºÙ, ¦a²z°Ï°ì, ·s_1111¦æ·~¤¤Ãþ¦WºÙ)
+demand_job_data <- totalResumeData %>% select(¸ê®Æ®É¶¡, ID1111Â¾°È¤pÃþ¦WºÙ, ¦a²z°Ï°ì, ·s_1111¦æ·~¤¤Ãþ¦WºÙ)
 
 ## Working area transfer
 demand_job_data$area.work <- NA
