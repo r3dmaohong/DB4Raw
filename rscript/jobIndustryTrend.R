@@ -127,11 +127,25 @@ totalResumeData$date <- totalResumeData$date %>% substr(., 1, 5)
 totalResumeData$date <- as.integer(totalResumeData$date)
 totalResumeData$date <- totalResumeData$date - 1
 
-###########################
-##Top 10 most beloved jobs
-###########################
+##Grouped by Department
+dpt.match <- read.csv("1111學群學門學類-20160617-1.csv", stringsAsFactors=F)
+for(i in 1:ncol(dpt.match)){
+  dpt.match[,i] <- gsub("[0-9+_]", "", dpt.match[,i])
+}
+totalResumeData$dpt <- ""
+for(i in 1:nrow(dpt.match)){
+  totalResumeData$dpt[which(totalResumeData$最高學歷_科系小類名稱==dpt.match[i,3])] <- dpt.match[i,2]
+}
+
+########################################
+###Top25 Job wanted, grouped by area...
+########################################
 JobTrend(totalResumeData, "希望職務小類名稱", "area.work", "AreaJobWanted")
 
+########################################
+###Top25 Job wanted, grouped by dpt...
+########################################
+JobTrend(totalResumeData, "希望職務小類名稱", "dpt", "DepartmentJobWanted")
 
 ###########
 ##Old Ver.
@@ -275,107 +289,109 @@ if(F){
   totalResumeData$date <- totalResumeData$date - 1
   
 }
-
-###########################
-##Top 10 most beloved jobs
-###########################
-## Top 10 most beloved jobs
-## Top 25 Demanded Jobs
-top10beloved.job <- totalResumeData[希望職務小類名稱!="工讀生", .N, by=.(date, area.work, 希望職務小類名稱)]
-top10beloved.job <- top10beloved.job[order(date, area.work, -N),]
-top10beloved.job[, percentage:=N/sum(N), by=.(date, area.work)]
-unique(top10beloved.job$area.work)
-
-##Backup
-totalBelovedJob <- top10beloved.job
-
-##Change freq to a new standard
-standard.top10beloved.job <- top10beloved.job[date==top10beloved.job$date[1]]
-top10beloved.job <- top10beloved.job[, head(.SD, 10), by=.(date, area.work)]
-top10beloved.job$Freq <- sapply(1:nrow(top10beloved.job), function(x){
-  if(standard.top10beloved.job$N[which(standard.top10beloved.job$希望職務小類名稱==top10beloved.job$希望職務小類名稱[x] & standard.top10beloved.job$area.work==top10beloved.job$area.work[x])] %>% toString != ""){
-    return(top10beloved.job$N[x] - standard.top10beloved.job$N[which(standard.top10beloved.job$希望職務小類名稱==top10beloved.job$希望職務小類名稱[x] & standard.top10beloved.job$area.work==top10beloved.job$area.work[x])])
-  }
-  ##Add missing standard
-  standard.top10beloved.job <<- rbind(standard.top10beloved.job, data.table(date=standard.top10beloved.job$date[1], area.work=top10beloved.job$area.work[x], 希望職務小類名稱=top10beloved.job$希望職務小類名稱[x], N=0, percentage=0))
-  return(top10beloved.job$N[x])
-})
-
-##Set ranking
-top10beloved.job$rank <-  NA
-countdown <- 0
-for(i in 1:nrow(top10beloved.job)){
-  if(i==1){
-    top10beloved.job$rank[i] <- 1
-  }else{
-    if(top10beloved.job$area.work[i]==top10beloved.job$area.work[i-1]){
-      if(top10beloved.job$percentage[i]==top10beloved.job$percentage[i-1]){
-        top10beloved.job$rank[i] <- top10beloved.job$rank[i-1]
-        countdown <- countdown + 1
-      }else{
-        top10beloved.job$rank[i] <- top10beloved.job$rank[i-1] + 1 + countdown
-        countdown <- 0
-      }      
-    }else{
+if(F){
+  ###########################
+  ##Top 10 most beloved jobs
+  ###########################
+  ## Top 10 most beloved jobs
+  ## Top 25 Demanded Jobs
+  top10beloved.job <- totalResumeData[希望職務小類名稱!="工讀生", .N, by=.(date, area.work, 希望職務小類名稱)]
+  top10beloved.job <- top10beloved.job[order(date, area.work, -N),]
+  top10beloved.job[, percentage:=N/sum(N), by=.(date, area.work)]
+  unique(top10beloved.job$area.work)
+  
+  ##Backup
+  totalBelovedJob <- top10beloved.job
+  
+  ##Change freq to a new standard
+  standard.top10beloved.job <- top10beloved.job[date==top10beloved.job$date[1]]
+  top10beloved.job <- top10beloved.job[, head(.SD, 10), by=.(date, area.work)]
+  top10beloved.job$Freq <- sapply(1:nrow(top10beloved.job), function(x){
+    if(standard.top10beloved.job$N[which(standard.top10beloved.job$希望職務小類名稱==top10beloved.job$希望職務小類名稱[x] & standard.top10beloved.job$area.work==top10beloved.job$area.work[x])] %>% toString != ""){
+      return(top10beloved.job$N[x] - standard.top10beloved.job$N[which(standard.top10beloved.job$希望職務小類名稱==top10beloved.job$希望職務小類名稱[x] & standard.top10beloved.job$area.work==top10beloved.job$area.work[x])])
+    }
+    ##Add missing standard
+    standard.top10beloved.job <<- rbind(standard.top10beloved.job, data.table(date=standard.top10beloved.job$date[1], area.work=top10beloved.job$area.work[x], 希望職務小類名稱=top10beloved.job$希望職務小類名稱[x], N=0, percentage=0))
+    return(top10beloved.job$N[x])
+  })
+  
+  ##Set ranking
+  top10beloved.job$rank <-  NA
+  countdown <- 0
+  for(i in 1:nrow(top10beloved.job)){
+    if(i==1){
       top10beloved.job$rank[i] <- 1
-      countdown <- 0
-    }
-  } 
-}
-
-write.csv(top10beloved.job, paste0("output\\per.month\\",gsub("[:punct:]","_", Sys.time()),"_top10beloved.job.csv"), row.names=F)
-
-###################
-##department vs job
-###################
-dpt.match <- read.csv("1111學群學門學類-20160617-1.csv", stringsAsFactors=F)
-for(i in 1:ncol(dpt.match)){
-  dpt.match[,i] <- gsub("[0-9+_]", "", dpt.match[,i])
-}
-totalResumeData$dpt <- ""
-for(i in 1:nrow(dpt.match)){
-  totalResumeData$dpt[which(totalResumeData$最高學歷_科系小類名稱==dpt.match[i,3])] <- dpt.match[i,2]
-}
-
-dpt.top10beloved.job <- totalResumeData %>% filter(., 希望職務小類名稱!="工讀生") %>% group_by(date, dpt, 希望職務小類名稱) %>% 
-  summarize(.,Freq=n()) %>% arrange(.,date, -Freq) 
-dpt.top10beloved.job <- dpt.top10beloved.job %>% filter(., dpt!="")
-dpt.top10beloved.job <- dpt.top10beloved.job %>% group_by(., date, dpt) %>% mutate(., percentage=Freq/sum(Freq))
-unique(dpt.top10beloved.job$dpt)
-
-##change freq to a new standard
-standard.dpt.top10beloved.job <- dpt.top10beloved.job %>% filter(., date==dpt.top10beloved.job$date[1])
-dpt.top10beloved.job <- dpt.top10beloved.job %>% group_by(date,dpt) %>% top_n(n = 10)
-dpt.top10beloved.job$Freq <- sapply(1:nrow(dpt.top10beloved.job), function(x){
-  if(standard.dpt.top10beloved.job$Freq[which(standard.dpt.top10beloved.job$希望職務小類名稱==dpt.top10beloved.job$希望職務小類名稱[x] & standard.dpt.top10beloved.job$dpt==dpt.top10beloved.job$dpt[x])] %>% toString !="")
-    return(dpt.top10beloved.job$Freq[x] - standard.dpt.top10beloved.job$Freq[which(standard.dpt.top10beloved.job$希望職務小類名稱==dpt.top10beloved.job$希望職務小類名稱[x] & standard.dpt.top10beloved.job$dpt==dpt.top10beloved.job$dpt[x])])
-  return(dpt.top10beloved.job$Freq[x])
-    
-})
-
-##Set ranking
-dpt.top10beloved.job$rank <-  NA
-countdown <- 0
-for(i in 1:nrow(dpt.top10beloved.job)){
-  if(i==1){
-    dpt.top10beloved.job$rank[i] <- 1
-  }else{
-    if(dpt.top10beloved.job$dpt[i]==dpt.top10beloved.job$dpt[i-1]){
-      if(dpt.top10beloved.job$percentage[i]==dpt.top10beloved.job$percentage[i-1]){
-        dpt.top10beloved.job$rank[i] <- dpt.top10beloved.job$rank[i-1]
-        countdown <- countdown + 1
-      }else{
-        dpt.top10beloved.job$rank[i] <- dpt.top10beloved.job$rank[i-1] + 1 + countdown
-        countdown <- 0
-      }      
     }else{
-      dpt.top10beloved.job$rank[i] <- 1
-      countdown <- 0
-    }
-  } 
+      if(top10beloved.job$area.work[i]==top10beloved.job$area.work[i-1]){
+        if(top10beloved.job$percentage[i]==top10beloved.job$percentage[i-1]){
+          top10beloved.job$rank[i] <- top10beloved.job$rank[i-1]
+          countdown <- countdown + 1
+        }else{
+          top10beloved.job$rank[i] <- top10beloved.job$rank[i-1] + 1 + countdown
+          countdown <- 0
+        }      
+      }else{
+        top10beloved.job$rank[i] <- 1
+        countdown <- 0
+      }
+    } 
+  }
+  
+  write.csv(top10beloved.job, paste0("output\\per.month\\",gsub("[:punct:]","_", Sys.time()),"_top10beloved.job.csv"), row.names=F)
+  
 }
-
-write.csv(dpt.top10beloved.job, paste0("output\\per.month\\",gsub("[:punct:]","_", Sys.time()),"_dpt.top10beloved.job.csv"), row.names=F)
+if(F){###################
+      ##department vs job
+      ###################
+      dpt.match <- read.csv("1111學群學門學類-20160617-1.csv", stringsAsFactors=F)
+      for(i in 1:ncol(dpt.match)){
+        dpt.match[,i] <- gsub("[0-9+_]", "", dpt.match[,i])
+      }
+      totalResumeData$dpt <- ""
+      for(i in 1:nrow(dpt.match)){
+        totalResumeData$dpt[which(totalResumeData$最高學歷_科系小類名稱==dpt.match[i,3])] <- dpt.match[i,2]
+      }
+      
+      dpt.top10beloved.job <- totalResumeData %>% filter(., 希望職務小類名稱!="工讀生") %>% group_by(date, dpt, 希望職務小類名稱) %>% 
+        summarize(.,Freq=n()) %>% arrange(.,date, -Freq) 
+      dpt.top10beloved.job <- dpt.top10beloved.job %>% filter(., dpt!="")
+      dpt.top10beloved.job <- dpt.top10beloved.job %>% group_by(., date, dpt) %>% mutate(., percentage=Freq/sum(Freq))
+      unique(dpt.top10beloved.job$dpt)
+      
+      ##change freq to a new standard
+      standard.dpt.top10beloved.job <- dpt.top10beloved.job %>% filter(., date==dpt.top10beloved.job$date[1])
+      dpt.top10beloved.job <- dpt.top10beloved.job %>% group_by(date,dpt) %>% top_n(n = 10)
+      dpt.top10beloved.job$Freq <- sapply(1:nrow(dpt.top10beloved.job), function(x){
+        if(standard.dpt.top10beloved.job$Freq[which(standard.dpt.top10beloved.job$希望職務小類名稱==dpt.top10beloved.job$希望職務小類名稱[x] & standard.dpt.top10beloved.job$dpt==dpt.top10beloved.job$dpt[x])] %>% toString !="")
+          return(dpt.top10beloved.job$Freq[x] - standard.dpt.top10beloved.job$Freq[which(standard.dpt.top10beloved.job$希望職務小類名稱==dpt.top10beloved.job$希望職務小類名稱[x] & standard.dpt.top10beloved.job$dpt==dpt.top10beloved.job$dpt[x])])
+        return(dpt.top10beloved.job$Freq[x])
+        
+      })
+      
+      ##Set ranking
+      dpt.top10beloved.job$rank <-  NA
+      countdown <- 0
+      for(i in 1:nrow(dpt.top10beloved.job)){
+        if(i==1){
+          dpt.top10beloved.job$rank[i] <- 1
+        }else{
+          if(dpt.top10beloved.job$dpt[i]==dpt.top10beloved.job$dpt[i-1]){
+            if(dpt.top10beloved.job$percentage[i]==dpt.top10beloved.job$percentage[i-1]){
+              dpt.top10beloved.job$rank[i] <- dpt.top10beloved.job$rank[i-1]
+              countdown <- countdown + 1
+            }else{
+              dpt.top10beloved.job$rank[i] <- dpt.top10beloved.job$rank[i-1] + 1 + countdown
+              countdown <- 0
+            }      
+          }else{
+            dpt.top10beloved.job$rank[i] <- 1
+            countdown <- 0
+          }
+        } 
+      }
+      
+      write.csv(dpt.top10beloved.job, paste0("output\\per.month\\",gsub("[:punct:]","_", Sys.time()),"_dpt.top10beloved.job.csv"), row.names=F)
+}
 
 
 
