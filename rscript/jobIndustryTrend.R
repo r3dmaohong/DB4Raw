@@ -110,7 +110,7 @@ names(totalResumeData)
 totalResumeData$希望工作性質 %>% table
 totalResumeData <- totalResumeData[希望工作性質=="全職" | 希望工作性質=="中高階",]
 
-##Working area transferation
+###Expect working area transferation
 totalResumeData$area.work <- ""
 totalResumeData[ substr(totalResumeData[,希望上班地區名稱],1,2) %in% North, area.work:="北部地區"]
 totalResumeData[ substr(totalResumeData[,希望上班地區名稱],1,2) %in% Mid, area.work:="中部地區"]
@@ -121,6 +121,9 @@ totalResumeData[ !(substr(totalResumeData[,希望上班地區名稱],1,2) %in% Out) , ar
 unique(totalResumeData$area.work)
 ## Check areas which are outside Taiwan
 totalResumeData[ area.work=="非台灣地區" , 希望上班地區名稱] %>% substr(., 1, 3) %>% table
+
+##Country
+totalResumeData$country <- totalResumeData$希望上班地區名稱 %>% substr(., 1, 3)
 
 totalResumeData$date %>% unique
 totalResumeData$date <- totalResumeData$date %>% substr(., 1, 5)
@@ -146,6 +149,18 @@ JobTrend(totalResumeData, "希望職務小類名稱", "area.work", "AreaJobWanted")
 ###Top25 Job wanted, grouped by dpt...
 ########################################
 JobTrend(totalResumeData, "希望職務小類名稱", "dpt", "DepartmentJobWanted")
+
+########################################
+###Top10 working area, grouped by dpt...
+########################################
+JobTrend(totalResumeData, "country", "dpt", "DepartmentExpectArea", 5)
+
+########################################
+###Top10 industry, grouped by dpt...
+########################################
+JobTrend(totalResumeData, "希望產業大類名稱", "dpt", "DepartmentExpectIndustry", 5)
+
+
 
 ###########
 ##Old Ver.

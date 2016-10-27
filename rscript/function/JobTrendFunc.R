@@ -14,7 +14,7 @@
 #fixed: date
 
 
-JobTrend <- function(OrigiData, targetCol, GroupByCol, filename){
+JobTrend <- function(OrigiData, targetCol, GroupByCol, filename, top_N=25){
   parseTargetCol  <- parse(text=targetCol)
   #parseGroupByCol <- parse(text=paste0("by = .(", paste0(GroupByCol, collapse=", "), ")"))
   
@@ -29,7 +29,7 @@ JobTrend <- function(OrigiData, targetCol, GroupByCol, filename){
   ##change freq to a new standard
   ##fixed: date
   standard.OutputData <- OutputData[date==OutputData$date[1]]
-  OutputData <- OutputData[, head(.SD, 25), by=c("date", GroupByCol)]
+  OutputData <- OutputData[, head(.SD, top_N), by=c("date", GroupByCol)]
   OutputData$Freq <- sapply(1:nrow(OutputData), function(x){
     #OutputData$N[x] - standard.OutputData$N[which(standard.OutputData[,eval(parse(text=targetCol))]==OutputData[,eval(parse(text=targetCol))][x] & standard.OutputData[,eval(parse(text=GroupByCol))]==OutputData[,eval(parse(text=GroupByCol))][x])]
     if(standard.OutputData$N[which(standard.OutputData[,eval(parse(text=targetCol))]==OutputData[,eval(parse(text=targetCol))][x] & standard.OutputData[,eval(parse(text=GroupByCol))]==OutputData[,eval(parse(text=GroupByCol))][x])] %>% toString != ""){
