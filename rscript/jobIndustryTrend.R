@@ -118,12 +118,25 @@ totalResumeData[ substr(totalResumeData[,希望上班地區名稱],1,2) %in% South, area
 totalResumeData[ substr(totalResumeData[,希望上班地區名稱],1,2) %in% East, area.work:="東部與離島地區"]
 totalResumeData[ !(substr(totalResumeData[,希望上班地區名稱],1,2) %in% Out) , area.work:="非台灣地區"]
 
+###Living area transferation
+totalResumeData$area.live <- ""
+totalResumeData[ substr(totalResumeData[,居住地區],1,2) %in% North, area.live:="北部地區"]
+totalResumeData[ substr(totalResumeData[,居住地區],1,2) %in% Mid, area.live:="中部地區"]
+totalResumeData[ substr(totalResumeData[,居住地區],1,2) %in% South, area.live:="南部地區"]
+totalResumeData[ substr(totalResumeData[,居住地區],1,2) %in% East, area.live:="東部與離島地區"]
+totalResumeData[ !(substr(totalResumeData[,居住地區],1,2) %in% Out) , area.live:="非台灣地區"]
+
 unique(totalResumeData$area.work)
 ## Check areas which are outside Taiwan
 totalResumeData[ area.work=="非台灣地區" , 希望上班地區名稱] %>% substr(., 1, 3) %>% table
 
 ##Country
-totalResumeData$country <- totalResumeData$希望上班地區名稱 %>% substr(., 1, 3)
+totalResumeData$country.work <- totalResumeData$希望上班地區名稱 %>% substr(., 1, 3)
+totalResumeData[ !(substr(totalResumeData[, country.work],1,2) %in% Out) , country.work:="非台灣地區"]
+
+totalResumeData$country.live <- totalResumeData$居住地區 %>% substr(., 1, 3)
+totalResumeData[ !(substr(totalResumeData[, country.live],1,2) %in% Out) , country.live:="非台灣地區"]
+
 
 totalResumeData$date %>% unique
 totalResumeData$date <- totalResumeData$date %>% substr(., 1, 5)
@@ -153,14 +166,17 @@ JobTrend(totalResumeData, "希望職務小類名稱", "dpt", "DepartmentJobWanted")
 ########################################
 ###Top10 working area, grouped by dpt...
 ########################################
-JobTrend(totalResumeData, "country", "dpt", "DepartmentExpectArea", 5)
+JobTrend(totalResumeData, "country.work", "dpt", "DepartmentExpectArea", 10)
 
 ########################################
 ###Top10 industry, grouped by dpt...
 ########################################
-JobTrend(totalResumeData, "希望產業大類名稱", "dpt", "DepartmentExpectIndustry", 5)
+JobTrend(totalResumeData, "希望產業大類名稱", "dpt", "DepartmentExpectIndustry", 10)
 
-
+########################################
+###Top10 working area, grouped by living area...
+########################################
+JobTrend(totalResumeData, "country.work", "area.live", "LivePExpectWorkP", 10)
 
 ###########
 ##Old Ver.
