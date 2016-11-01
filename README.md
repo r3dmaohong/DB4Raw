@@ -1,0 +1,3 @@
+# DB4Raw
+###memo
+####1. JobTrendFunc.R,JobIndustryTrend.R  => IDB cases...
