@@ -23,6 +23,10 @@ JobTrend <- function(OrigiData, targetCol, GroupByCol, filename, top_N=25){
   OutputData[, percentage:=N/sum(N), by=c("date", GroupByCol)]
   cat(GroupByCol, " : ", unique(OutputData[,eval(parse(text=GroupByCol))]))
   
+  ##Status
+  #pb <- txtProgressBar(min = 0, max = total, style = 3)
+  #total <- 20
+  
   ##Backup 
   totalOutputData <- OutputData
   
@@ -37,6 +41,8 @@ JobTrend <- function(OrigiData, targetCol, GroupByCol, filename, top_N=25){
     }
     return(OutputData$N[x])
   })
+  
+  #setTxtProgressBar(pb, 5)
   
   ##Set ranking
   OutputData$rank <-  0
@@ -110,5 +116,6 @@ JobTrend <- function(OrigiData, targetCol, GroupByCol, filename, top_N=25){
   
   write.csv(OutputDemandJob, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d_"), filename, ".csv"), row.names=F)
   write.csv(totalOutputData, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d_"), filename, "_History.csv"), row.names=F)
-  cat("Completed.")
+  
+  cat("\nCompleted.")
 }
