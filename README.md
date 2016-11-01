@@ -2,5 +2,6 @@
 ###memo
 ####1.　IDB cases...
 ```
-JobTrendJobTrendFunc.R,JobIndustryTrend.R
+JobIndustryTrend.R
+JobTrendJobTrendFunc.R
 ```
