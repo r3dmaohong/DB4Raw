@@ -1,6 +1,6 @@
 # DB4Raw
 ###memo
-####1.　IDB cases...
+####1. IDB cases...
 
 >JobIndustryTrend.R
 
