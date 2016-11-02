@@ -137,7 +137,6 @@ totalResumeData[ !(substr(totalResumeData[, country.work],1,2) %in% Out) , count
 totalResumeData$country.live <- totalResumeData$居住地區 %>% substr(., 1, 3)
 totalResumeData[ !(substr(totalResumeData[, country.live],1,2) %in% Out) , country.live:="非台灣地區"]
 
-
 totalResumeData$date %>% unique
 totalResumeData$date <- totalResumeData$date %>% substr(., 1, 5)
 totalResumeData$date <- as.integer(totalResumeData$date)
