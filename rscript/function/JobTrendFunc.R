@@ -13,12 +13,24 @@
 #filename="AreaJobDemand"
 #fixed: date
 
+library(tidyr) #separate_rows()
 
 JobTrend <- function(OrigiData, targetCol, GroupByCol, filename, top_N=25){
   parseTargetCol  <- parse(text=targetCol)
   #parseGroupByCol <- parse(text=paste0("by = .(", paste0(GroupByCol, collapse=", "), ")"))
   
-  OutputData <- OrigiData[ eval(parseTargetCol)!="工讀生", .N, by= c("date", GroupByCol, targetCol)]
+  ##The col of jobs changes it's format to using comma pasting multiple jobs...
+  OutputData <- separate_rows(OrigiData, eval(parseTargetCol), sep = ",") %>% unique
+  
+  if(length(names(OutputData)[grepl("編號", names(OutputData))])==1){
+    OutputData <- OutputData[, c(names(OutputData)[grepl("編號", names(OutputData))], "date", GroupByCol, targetCol), with=FALSE] %>% unique
+  }else{
+    names(OutputData)
+    uniColN <- readline(prompt="Enter the index of col name which should be used as unique index: ")
+    OutputData <- OutputData[, c(names(OutputData)[as.numeric(uniColN)], "date", GroupByCol, targetCol), with=FALSE] %>% unique
+  } 
+  
+  OutputData <- OutputData[ eval(parseTargetCol)!="工讀生", .N, by= c("date", GroupByCol, targetCol)]
   OutputData <- OutputData[eval(parse(text=paste0("order(", paste("date", GroupByCol, "-N", sep=", "), ")")))]
   OutputData[, percentage:=N/sum(N), by=c("date", GroupByCol)]
   cat(GroupByCol, " : ", unique(OutputData[,eval(parse(text=GroupByCol))]))

@@ -176,4 +176,3 @@ JobTrend(totalResumeData, "希望產業大類名稱", "dpt", "DepartmentExpectIndustry",
 ###Top10 working area, grouped by living area...
 ########################################
 JobTrend(totalResumeData, "country.work", "area.live", "LivePExpectWorkP", 10)
-
