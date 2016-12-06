@@ -22,23 +22,28 @@ files.lists <- pblapply(files,function(file.name){
   ##Create new col:date by it's file name...
   date <- unlist(strsplit(file.name, "/"))[length(unlist(strsplit(file.name, "/")))] %>% gsub("[A-z.]", "", .) ##%>% substr(., 1, 7)
   file.list <- cbind(file.list, date)
-  
+  names(file.list) <- names(file.list) %>% iconv(., "UTF-8")
   return(file.list)
 })
 
 ##Combine all the lists into data frame.
-total.data <- do.call(rbind, files.lists) # do.call(rbind.fill,files.lists)
+total.data <- do.call(rbind.fill,files.lists) # do.call(rbind, files.lists)
+gc()
 rm(files.lists,files)
 dim(total.data)
-str(total.data)
+#str(total.data)
 names(total.data)
 setDT(total.data)
 
+#dat <- total.data
 ##Import with encoding will face error...
 ##File's content itself is garbled...
-names(total.data) <- names(total.data) %>% iconv(., "UTF-8")
+#names(total.data) <- names(total.data) %>% iconv(., "UTF-8")
 cols <- 1:length(names(total.data))
-total.data[, (cols) := lapply(.SD, function(x) iconv(x, "UTF-8"))]
+
+#total.data[, (cols) := lapply(.SD, function(x) iconv(x, "UTF-8"))]
+total.data[, (cols) := lapply(.SD, function(x) ifelse(is.na(x %>% iconv(., "UTF-8")), x, x %>% iconv(., "UTF-8")))]
+
 if(length(names(total.data)) != length(unique(names(total.data))))
   total.data <- total.data[, unique(names(total.data)), with=F]
 dim(total.data)
