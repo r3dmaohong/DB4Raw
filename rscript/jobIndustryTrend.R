@@ -22,13 +22,19 @@ files.lists <- pblapply(files,function(file.name){
   ##Create new col:date by it's file name...
   date <- unlist(strsplit(file.name, "/"))[length(unlist(strsplit(file.name, "/")))] %>% gsub("[A-z.]", "", .) ##%>% substr(., 1, 7)
   file.list <- cbind(file.list, date)
-  names(file.list) <- names(file.list) %>% iconv(., "UTF-8")
+  
+  if(any(is.na(names(file.list) %>% iconv(., "UTF-8")))){
+    names(file.list) <- names(file.list)
+  }else{
+    names(file.list) <- names(file.list) %>% iconv(., "UTF-8")
+  }
   return(file.list)
 })
 
 ##Combine all the lists into data frame.
-total.data <- do.call(rbind.fill,files.lists) # do.call(rbind, files.lists)
 gc()
+#sapply(files.lists, function(x) ncol(x))
+total.data <- do.call(rbind.fill,files.lists) # do.call(rbind, files.lists)
 rm(files.lists,files)
 dim(total.data)
 #str(total.data)
@@ -42,7 +48,9 @@ setDT(total.data)
 cols <- 1:length(names(total.data))
 
 #total.data[, (cols) := lapply(.SD, function(x) iconv(x, "UTF-8"))]
+total.data$職缺狀態 %>% table
 total.data[, (cols) := lapply(.SD, function(x) ifelse(is.na(x %>% iconv(., "UTF-8")), x, x %>% iconv(., "UTF-8")))]
+total.data$職缺狀態 %>% table
 
 if(length(names(total.data)) != length(unique(names(total.data))))
   total.data <- total.data[, unique(names(total.data)), with=F]
@@ -74,13 +82,14 @@ total.data$date %>% unique
 total.data$date <- total.data$date %>% substr(., 1, 5)
 total.data$date <- as.integer(total.data$date)
 total.data$date <- total.data$date - 1
+gc()
 
 #不動產經紀人 => 不動產經紀人/營業員
 total.data$職務小類名稱[total.data$職務小類名稱=="不動產經紀人"] <- "不動產經紀人/營業員"
 
 ##Function for Trend analysis...
 source("rscript/function/JobTrendFunc.R", print.eval  = TRUE)
-
+gc()
 #####################################
 #Top25 Job demand, grouped by area...
 #####################################
@@ -149,6 +158,7 @@ totalResumeData$date <- totalResumeData$date - 1
 
 ##Grouped by Department
 dpt.match <- read.csv("1111學群學門學類-20160617-1.csv", stringsAsFactors=F)
+
 for(i in 1:ncol(dpt.match)){
   dpt.match[,i] <- gsub("[0-9+_]", "", dpt.match[,i])
 }
@@ -156,6 +166,20 @@ totalResumeData$dpt <- ""
 for(i in 1:nrow(dpt.match)){
   totalResumeData$dpt[which(totalResumeData$最高學歷_科系小類名稱==dpt.match[i,3])] <- dpt.match[i,2]
 }
+
+##Encoding problem
+#EncodingCheck(dpt.match)
+EncodingCheck(totalResumeData)
+
+setDT(totalResumeData)
+totalResumeData[, names(totalResumeData) := lapply(.SD, function(x) {if (is.character(x)) Encoding(x) <- "unknown"; x})]
+for(i in 1:ncol(totalResumeData)){
+  if(sum(is.na(totalResumeData[[i]] %>% iconv("UTF-8")))<(nrow(totalResumeData)/2)){
+    #print(i)
+    totalResumeData[[i]] <- totalResumeData[[i]] %>% iconv("UTF-8")
+  }
+}
+#[1] 1  4  7  9 11  13 15  18  21  26
 
 ########################################
 ###Top25 Job wanted, grouped by area...

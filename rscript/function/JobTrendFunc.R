@@ -16,12 +16,20 @@
 library(tidyr) #separate_rows()
 
 JobTrend <- function(OrigiData, targetCol, GroupByCol, filename, top_N=25){
+  gc()
   parseTargetCol  <- parse(text=targetCol)
   #parseGroupByCol <- parse(text=paste0("by = .(", paste0(GroupByCol, collapse=", "), ")"))
   
   ##The col of jobs changes it's format to using comma pasting multiple jobs...
-  OutputData <- separate_rows(OrigiData, eval(parseTargetCol), sep = ",") %>% unique
-  
+  if(grepl(",", OrigiData[,eval(parseTargetCol)]) %>% any){
+    cat("Separating rows...\n")
+    OutputData <- separate_rows(OrigiData, eval(parseTargetCol), sep = ",") %>% unique
+  }else{
+    OutputData <- OrigiData
+  }
+  gc()
+    
+  setDT(OutputData)
   if(length(names(OutputData)[grepl("編號", names(OutputData))])==1){
     OutputData <- OutputData[, c(names(OutputData)[grepl("編號", names(OutputData))], "date", GroupByCol, targetCol), with=FALSE] %>% unique
   }else{
@@ -29,7 +37,7 @@ JobTrend <- function(OrigiData, targetCol, GroupByCol, filename, top_N=25){
     uniColN <- readline(prompt="Enter the index of col name which should be used as unique index: ")
     OutputData <- OutputData[, c(names(OutputData)[as.numeric(uniColN)], "date", GroupByCol, targetCol), with=FALSE] %>% unique
   } 
-  
+  gc()
   OutputData <- OutputData[ eval(parseTargetCol)!="工讀生", .N, by= c("date", GroupByCol, targetCol)]
   OutputData <- OutputData[eval(parse(text=paste0("order(", paste("date", GroupByCol, "-N", sep=", "), ")")))]
   OutputData[, percentage:=N/sum(N), by=c("date", GroupByCol)]
@@ -53,7 +61,7 @@ JobTrend <- function(OrigiData, targetCol, GroupByCol, filename, top_N=25){
     }
     return(OutputData$N[x])
   })
-  
+  gc()
   #setTxtProgressBar(pb, 5)
   
   ##Set ranking
@@ -95,6 +103,21 @@ JobTrend <- function(OrigiData, targetCol, GroupByCol, filename, top_N=25){
   ##Rank, Area, Job, Percentage, Freq
   ##Keep the latest data
   OutputDemandJob <- OutputData[, eval(parse(text=paste0(".(rank, ", GroupByCol, ", ",  targetCol, ", percentage)")))]
+  
+  OutputData[, names(OutputData) := lapply(.SD, function(x) {if (is.character(x)) Encoding(x) <- "unknown"; x})]
+  for(i in 1:ncol(OutputData)){
+    if(sum(is.na(OutputData[[i]] %>% iconv("UTF-8")))<(nrow(OutputData)/2)){
+      #print(i)
+      OutputData[[i]] <- OutputData[[i]] %>% iconv("UTF-8")
+    }
+  }
+  totalOutputData[, names(totalOutputData) := lapply(.SD, function(x) {if (is.character(x)) Encoding(x) <- "unknown"; x})]
+  for(i in 1:ncol(totalOutputData)){
+    if(sum(is.na(totalOutputData[[i]] %>% iconv("UTF-8")))<(nrow(totalOutputData)/2)){
+      #print(i)
+      totalOutputData[[i]] <- totalOutputData[[i]] %>% iconv("UTF-8")
+    }
+  }
   totalOutputData <- totalOutputData[index %in% OutputData$index, ]
   
   ##Check
@@ -128,6 +151,27 @@ JobTrend <- function(OrigiData, targetCol, GroupByCol, filename, top_N=25){
   
   write.csv(OutputDemandJob, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d_"), filename, ".csv"), row.names=F)
   write.csv(totalOutputData, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d_"), filename, "_History.csv"), row.names=F)
-  
+  gc()
   cat("\nCompleted.")
+}
+
+EncodingCheck <- function(tmp){
+  if(is.list(tmp)){
+    for(i in 1:ncol(tmp)){
+      tryCatch({
+        print(Encoding(tmp[[i]]) %>% unique)
+      }, error = function(e) {
+        ##conditionMessage(e)
+      })
+    }
+  }else{
+    for(i in 1:ncol(tmp)){
+      tryCatch({
+        print(Encoding(tmp[,i]) %>% unique)
+      }, error = function(e) {
+        ##conditionMessage(e)
+      })
+    }
+  }
+  
 }
