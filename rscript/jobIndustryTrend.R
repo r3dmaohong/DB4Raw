@@ -78,10 +78,13 @@ unique(total.data$area.work)
 ##Check areas which are outside Taiwan
 total.data[ area.work=="非台灣地區" , 工作地點] %>% substr(., 1, 3) %>% table
 
+## This proccess method is weird, but use it first... for temporarily...
 total.data$date %>% unique
 total.data$date <- total.data$date %>% substr(., 1, 5)
 total.data$date <- as.integer(total.data$date)
 total.data$date <- total.data$date - 1
+## 10600 => 10512
+total.data$date[grepl("00$", total.data$date)] <- total.data$date[grepl("00$", total.data$date)] - 100 + 12
 gc()
 
 #不動產經紀人 => 不動產經紀人/營業員
@@ -155,6 +158,9 @@ totalResumeData$date %>% unique
 totalResumeData$date <- totalResumeData$date %>% substr(., 1, 5)
 totalResumeData$date <- as.integer(totalResumeData$date)
 totalResumeData$date <- totalResumeData$date - 1
+## 10600 => 10512
+totalResumeData$date[grepl("00$", totalResumeData$date)] <- totalResumeData$date[grepl("00$", totalResumeData$date)] - 100 + 12
+gc()
 
 ##Grouped by Department
 dpt.match <- read.csv("1111學群學門學類-20160617-1.csv", stringsAsFactors=F)
