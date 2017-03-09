@@ -13,6 +13,13 @@ library(data.table)
 library(dplyr)
 library(plyr)
 
+
+North <- c("台北", "新北", "基隆", "桃園", "新竹")
+Mid   <- c("苗栗", "台中", "彰化", "南投", "雲林")
+South <- c("嘉義", "台南", "高雄", "屏東")
+East  <- c("宜蘭", "花蓮", "台東", "澎湖", "金門", "連江")
+Out   <- c(North, Mid, South, East)
+
 # Demand
 ##Get all files' names.
 files <- list.files(file.path("per.month", "求才"), full.names = TRUE)
@@ -67,11 +74,6 @@ datHistory <- lapply(files, function(file.name){
   
   ## Working area transfer
   dat$area.work <- ""
-  North <- c("台北", "新北", "基隆", "桃園", "新竹")
-  Mid   <- c("苗栗", "台中", "彰化", "南投", "雲林")
-  South <- c("嘉義", "台南", "高雄", "屏東")
-  East  <- c("宜蘭", "花蓮", "台東", "澎湖", "金門", "連江")
-  Out   <- c(North, Mid, South, East)
   dat[ substr(dat[,工作地點],1,2) %in% North, area.work:="北部地區"]
   dat[ substr(dat[,工作地點],1,2) %in% Mid, area.work:="中部地區"]
   dat[ substr(dat[,工作地點],1,2) %in% South, area.work:="南部地區"]
@@ -118,103 +120,7 @@ datHistory$percentage[is.nan(datHistory$percentage)] <- 0
 filename <- "AreaJobDemand"
 JobTrend_standard(datHistory, "職務小類名稱", "area.work", filename)
 
-
-write.csv(datHistoryStandard, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d_"), filename, "_History.csv"), row.names = FALSE)
 ## 
-
-if(F){
-  for(i_file in 1:length(files)){
-    ##import file
-    file.name <- files[i_file]
-    dat <- fread(file.name)
-    date <- unlist(strsplit(file.name, "/"))[length(unlist(strsplit(file.name, "/")))] %>% gsub("[A-z.]", "", .) ##%>% substr(., 1, 7)
-    dat <- cbind(dat, date)
-    
-    if(any(is.na(names(dat) %>% iconv(., "UTF-8")))){
-      names(dat) <- names(dat)
-    }else{
-      names(dat) <- names(dat) %>% iconv(., "UTF-8")
-      cols <- 1:length(names(dat))
-      dat[, (cols) := lapply(.SD, function(x) ifelse(is.na(x %>% iconv(., "UTF-8")), x, x %>% iconv(., "UTF-8")))]
-    }
-    
-    gc()
-    
-    ## view
-    dim(dat)
-    names(dat)
-    setDT(dat)
-    
-    #dat <- dat
-    ##Import with encoding will face error...
-    ##File's content itself is garbled...
-    #names(dat) <- names(dat) %>% iconv(., "UTF-8")
-    #cols <- 1:length(names(dat))
-    
-    #dat[, (cols) := lapply(.SD, function(x) iconv(x, "UTF-8"))]
-    #dat$職缺狀態 %>% table
-    #dat[, (cols) := lapply(.SD, function(x) ifelse(is.na(x %>% iconv(., "UTF-8")), x, x %>% iconv(., "UTF-8")))]
-    #dat$職缺狀態 %>% table
-    
-    if(length(names(dat)) != length(unique(names(dat))))
-      dat <- dat[, unique(names(dat)), with=F]
-    dim(dat)
-    names(dat)
-    
-    dat <- dat[ 實習職缺=="N" ]
-    dat$職缺屬性 %>% table
-    dat <- dat[ 職缺屬性=="全職" | 職缺屬性=="中高階" ]
-    
-    ## Working area transfer
-    dat$area.work <- ""
-    North <- c("台北", "新北", "基隆", "桃園", "新竹")
-    Mid   <- c("苗栗", "台中", "彰化", "南投", "雲林")
-    South <- c("嘉義", "台南", "高雄", "屏東")
-    East  <- c("宜蘭", "花蓮", "台東", "澎湖", "金門", "連江")
-    Out   <- c(North, Mid, South, East)
-    dat[ substr(dat[,工作地點],1,2) %in% North, area.work:="北部地區"]
-    dat[ substr(dat[,工作地點],1,2) %in% Mid, area.work:="中部地區"]
-    dat[ substr(dat[,工作地點],1,2) %in% South, area.work:="南部地區"]
-    dat[ substr(dat[,工作地點],1,2) %in% East, area.work:="東部與離島地區"]
-    dat[ !(substr(dat[,工作地點],1,2) %in% Out) , area.work:="非台灣地區"]
-    
-    unique(dat$area.work)
-    ##Check areas which are outside Taiwan
-    dat[ area.work=="非台灣地區" , 工作地點] %>% substr(., 1, 3) %>% table
-    
-    ## This proccess method is weird, but use it first... for temporarily...
-    dat$date %>% unique
-    dat$date <- dat$date %>% substr(., 1, 5)
-    dat$date <- as.integer(dat$date)
-    dat$date <- dat$date - 1
-    ## 10600 => 10512
-    dat$date[grepl("00$", dat$date)] <- dat$date[grepl("00$", dat$date)] - 100 + 12
-    gc()
-    
-    #不動產經紀人 => 不動產經紀人/營業員
-    dat$職務小類名稱[dat$職務小類名稱=="不動產經紀人"] <- "不動產經紀人/營業員"
-    
-    tmp <- JobTrend_unitHistory(dat, "職務小類名稱", "area.work", "AreaJobDemand", i, length(files))
-    #####################################
-    #Top25 Job demand, grouped by area...
-    #####################################
-    #if(exists("totalTMP")){
-    #  totalTMP <- rbind(totalTMP,tmp)
-    #}else{
-    #  totalTMP <- tmp
-    #}
-    gc()
-  }
-}
-
-
-
-gc()
-#####################################
-#Top25 Job demand, grouped by area...
-#####################################
-JobTrend(dat, "職務小類名稱", "area.work", "AreaJobDemand")
-
 ###################################################
 ###################################################
 ##############    I am a divider..   ##############
@@ -307,6 +213,18 @@ for(i in 1:ncol(totalResumeData)){
 ########################################
 ###Top25 Job wanted, grouped by area...
 ########################################
+tmp <- JobTrend_unitHistory(totalResumeData, "希望職務小類名稱", "area.work")
+tmp <- FillMissingJobRow(tmp, "希望職務小類名稱", "area.work")
+tmp[, percentage:=N/sum(N), by=c("date", "area.work")]
+tmp$date %>% unique
+tmp$date <- as.numeric(tmp$date)
+tmp$percentage[is.nan(tmp$percentage)] <- 0
+## Get standard hitorical data...
+## Export
+filename <- "AreaJobWanted"
+JobTrend_standard(tmp, "希望職務小類名稱", "area.work", filename)
+
+
 JobTrend(totalResumeData, "希望職務小類名稱", "area.work", "AreaJobWanted")
 
 ########################################
