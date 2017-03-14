@@ -213,18 +213,16 @@ for(i in 1:ncol(totalResumeData)){
 ########################################
 ###Top25 Job wanted, grouped by area...
 ########################################
-tmp <- JobTrend_unitHistory(totalResumeData, "希望職務小類名稱", "area.work")
-tmp <- FillMissingJobRow(tmp, "希望職務小類名稱", "area.work")
-tmp[, percentage:=N/sum(N), by=c("date", "area.work")]
-tmp$date %>% unique
-tmp$date <- as.numeric(tmp$date)
-tmp$percentage[is.nan(tmp$percentage)] <- 0
+#tmp <- JobTrend_unitHistory(totalResumeData, "希望職務小類名稱", "area.work")
+#tmp <- FillMissingJobRow(tmp, "希望職務小類名稱", "area.work")
+#tmp[, percentage:=N/sum(N), by=c("date", "area.work")]
+#tmp$date %>% unique
+#tmp$date <- as.numeric(tmp$date)
+#tmp$percentage[is.nan(tmp$percentage)] <- 0
 ## Get standard hitorical data...
 ## Export
-filename <- "AreaJobWanted"
-JobTrend_standard(tmp, "希望職務小類名稱", "area.work", filename)
-
-
+#filename <- "AreaJobWanted"
+#JobTrend_standard(tmp, "希望職務小類名稱", "area.work", filename)
 JobTrend(totalResumeData, "希望職務小類名稱", "area.work", "AreaJobWanted")
 
 ########################################

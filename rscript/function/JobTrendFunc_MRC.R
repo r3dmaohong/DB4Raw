@@ -27,7 +27,7 @@ JobTrend_unitHistory <- function(OrigiData, targetCol, GroupByCol){
   
   ##The col of jobs changes it's format to using comma pasting multiple jobs...
   if(grepl(",", OrigiData[,eval(parseTargetCol)]) %>% any){
-    cat("Separating rows...\n")
+    print("Separating rows...")
     OutputData <- separate_rows(OrigiData, eval(parseTargetCol), sep = ",") %>% unique
   }else{
     OutputData <- OrigiData
@@ -46,7 +46,7 @@ JobTrend_unitHistory <- function(OrigiData, targetCol, GroupByCol){
   OutputData <- OutputData[ eval(parseTargetCol)!="¤uÅª¥Í", .N, by= c("date", GroupByCol, targetCol)]
   OutputData <- OutputData[eval(parse(text=paste0("order(", paste("date", GroupByCol, "-N", sep=", "), ")")))]
   #OutputData[, percentage:=N/sum(N), by=c("date", GroupByCol)]
-  cat(GroupByCol, " : ", unique(OutputData[,eval(parse(text=GroupByCol))]))
+  print(paste0(GroupByCol, " : ", paste0(unique(OutputData[,eval(parse(text=GroupByCol))]), collapse = ", ")))
   
   ## Fill all missing value...
   
@@ -101,7 +101,6 @@ FillMissingJobRow <- function(datHistory, targetCol, GroupByCol){
 ##--------------------------------------------------
 ## End
 
-
 JobTrend_standard <- function(datHistory, targetCol, GroupByCol, filename, top_N=25){
   stopifnot(class(datHistory$date)=="numeric")
   
@@ -128,10 +127,10 @@ JobTrend_standard <- function(datHistory, targetCol, GroupByCol, filename, top_N
   ## Encode problem
   #datHistory[, names(datHistory) := lapply(.SD, function(x) {if (is.character(x)) Encoding(x) <- "unknown"; x})]
   for(i in 1:ncol(datHistory)){
-    if(sum(is.na(datHistory[[i]] %>% iconv("UTF-8")))<(nrow(datHistory)/2)){
+    #if(sum(is.na(datHistory[[i]] %>% iconv("UTF-8")))<(nrow(datHistory)/2)){
       #print(i)
-      datHistory[[i]] <- datHistory[[i]] %>% iconv("UTF-8")
-    }
+      datHistory[[i]] <- ifelse(is.na(datHistory[[i]] %>% iconv("UTF-8")), datHistory[[i]], datHistory[[i]] %>% iconv("UTF-8"))
+    #}
   }
   
   #datHistory <- datHistory[, eval(parse(text=paste0(".(date, ", GroupByCol, ", ",  targetCol, ", Freq, index)")))]
@@ -156,10 +155,10 @@ JobTrend_standard <- function(datHistory, targetCol, GroupByCol, filename, top_N
   
   
   datHistory <- datHistory[eval(parse(text=paste0(GroupByCol,"!='' & ", targetCol,"!=''"))),]
-  datHistory[, names(datHistory) := lapply(.SD, function(x) {if (is.character(x)) Encoding(x) <- "unknown"; x})]
-  for(i in 1:ncol(datHistory)){
-    datHistory[[i]] <- ifelse(is.na(iconv(datHistory[[i]], "UTF-8")), datHistory[[i]], iconv(datHistory[[i]], "UTF-8"))
-  }
+  #datHistory[, names(datHistory) := lapply(.SD, function(x) {if (is.character(x)) Encoding(x) <- "unknown"; x})]
+  #for(i in 1:ncol(datHistory)){
+  #  datHistory[[i]] <- ifelse(is.na(iconv(datHistory[[i]], "UTF-8")), datHistory[[i]], iconv(datHistory[[i]], "UTF-8"))
+  #}
   
   datHistory <- datHistory[eval(parse(text=paste0("order(", paste(paste("date", GroupByCol, sep=", "), "index", sep=", "), ")")))]
   latestDat <- datHistory[date==max(date)]
@@ -194,7 +193,7 @@ JobTrend_standard <- function(datHistory, targetCol, GroupByCol, filename, top_N
   write.csv(latestDat, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d_"), filename, ".csv"), row.names=F)
   write.csv(datHistory, paste0("output\\per.month\\", format(Sys.time(), "%Y%m%d_"), filename, "_History.csv"), row.names=F)
   gc()
-  cat("\nCompleted.")
+  #cat("\nCompleted.")
 }
 
 EncodingCheck <- function(tmp){
@@ -215,6 +214,21 @@ EncodingCheck <- function(tmp){
       })
     }
   }
+}
+
+JobTrend <- function(dat, targetCol, GroupByCol, filename, top_N=25){
+  tmp <- JobTrend_unitHistory(dat, targetCol, GroupByCol)
+  print("Finished : JobTrend_unitHistory")
+  tmp <- FillMissingJobRow(tmp, targetCol, GroupByCol)
+  print("Finished : FillMissingJobRow")
+  tmp[, percentage:=N/sum(N), by=c("date", GroupByCol)]
+  #tmp$date %>% unique
+  tmp$date <- as.numeric(tmp$date)
+  tmp$percentage[is.nan(tmp$percentage)] <- 0
+  ## Get standard hitorical data...
+  ## Export
+  JobTrend_standard(tmp, targetCol, GroupByCol, filename, top_N)
+  print("Finished : JobTrend_standard")
 }
 
 
