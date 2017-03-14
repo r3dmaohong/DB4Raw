@@ -1,4 +1,8 @@
-#MapReduce like concept : Job Industry Trend
+#' @title Job Industry Trend Analysis
+#' @description Analyze historical changes of data, and get the latest trend.
+#' @note Solving Ram Problem: Read and analyze one file and another, 
+#'       then combine the result. 
+
 rm(list = ls()) #Remove all objects in the environment
 gc() ##Free up the memory
 
@@ -13,25 +17,23 @@ library(data.table)
 library(dplyr)
 library(plyr)
 
-
+#' Define area
 North <- c("¥x¥_", "·s¥_", "°ò¶©", "®ç¶é", "·s¦Ë")
 Mid   <- c("­]®ß", "¥x¤¤", "¹ü¤Æ", "«n§ë", "¶³ªL")
 South <- c("¹Å¸q", "¥x«n", "°ª¶¯", "«ÌªF")
 East  <- c("©yÄõ", "ªá½¬", "¥xªF", "¼ê´ò", "ª÷ªù", "³s¦¿")
 Out   <- c(North, Mid, South, East)
 
-# Demand
-##Get all files' names.
+#' Demand
+#' Get all files' names.
 files <- list.files(file.path("per.month", "¨D¤~"), full.names = TRUE)
 files <- files[grepl("csv", files)]
 files <- sort(files)
 
-##Function for Trend analysis...
+#' Function for Trend analysis...
 source("rscript/function/JobTrendFunc_MRC.R", print.eval  = TRUE)
 
-## Total history of data...
-
-## Generate historical changes
+#' Read and analyze all the file one by one
 datHistory <- lapply(files, function(file.name){
   dat <- fread(file.name)
   date <- unlist(strsplit(file.name, "/"))[length(unlist(strsplit(file.name, "/")))] %>% gsub("[A-z.]", "", .) ##%>% substr(., 1, 7)
@@ -46,11 +48,9 @@ datHistory <- lapply(files, function(file.name){
   }
   
   gc()
-  
-  ## view
-  dim(dat)
-  names(dat)
   setDT(dat)
+  
+  #' Those which are not closed.
   dat <- dat[Â¾¯ÊÃö³¬®É¶¡=="",]
   #dat <- dat
   ##Import with encoding will face error...
@@ -65,14 +65,12 @@ datHistory <- lapply(files, function(file.name){
   
   if(length(names(dat)) != length(unique(names(dat))))
     dat <- dat[, unique(names(dat)), with=F]
-  dim(dat)
-  names(dat)
   
   dat <- dat[ ¹ê²ßÂ¾¯Ê=="N" ]
   dat$Â¾¯ÊÄÝ©Ê %>% table
   dat <- dat[ Â¾¯ÊÄÝ©Ê=="¥þÂ¾" | Â¾¯ÊÄÝ©Ê=="¤¤°ª¶¥" ]
   
-  ## Working area transfer
+  #' Transfer working area
   dat$area.work <- ""
   dat[ substr(dat[,¤u§@¦aÂI],1,2) %in% North, area.work:="¥_³¡¦a°Ï"]
   dat[ substr(dat[,¤u§@¦aÂI],1,2) %in% Mid, area.work:="¤¤³¡¦a°Ï"]
@@ -80,11 +78,13 @@ datHistory <- lapply(files, function(file.name){
   dat[ substr(dat[,¤u§@¦aÂI],1,2) %in% East, area.work:="ªF³¡»PÂ÷®q¦a°Ï"]
   dat[ !(substr(dat[,¤u§@¦aÂI],1,2) %in% Out) , area.work:="«D¥xÆW¦a°Ï"]
   
-  unique(dat$area.work)
-  ##Check areas which are outside Taiwan
+  #unique(dat$area.work)
+  
+  #' Check areas which are outside Taiwan
   dat[ area.work=="«D¥xÆW¦a°Ï" , ¤u§@¦aÂI] %>% substr(., 1, 3) %>% table
   
-  ## This proccess method is weird, but use it first... for temporarily...
+  #' Date processing
+  #' This proccess method is weird, but use it first... for temporarily...
   dat$date %>% unique
   dat$date <- dat$date %>% substr(., 1, 5)
   dat$date <- as.integer(dat$date)
@@ -93,18 +93,11 @@ datHistory <- lapply(files, function(file.name){
   dat$date[grepl("00$", dat$date)] <- dat$date[grepl("00$", dat$date)] - 100 + 12
   gc()
   
-  #¤£°Ê²£¸g¬ö¤H => ¤£°Ê²£¸g¬ö¤H/Àç·~­û
+  #' Old name to New name
   dat$Â¾°È¤pÃþ¦WºÙ[dat$Â¾°È¤pÃþ¦WºÙ=="¤£°Ê²£¸g¬ö¤H"] <- "¤£°Ê²£¸g¬ö¤H/Àç·~­û"
   
+  #
   tmp <- JobTrend_unitHistory(dat, "Â¾°È¤pÃþ¦WºÙ", "area.work")
-  #####################################
-  #Top25 Job demand, grouped by area...
-  #####################################
-  #if(exists("totalTMP")){
-  #  totalTMP <- rbind(totalTMP,tmp)
-  #}else{
-  #  totalTMP <- tmp
-  #}
   gc()
   return(tmp)
 })
@@ -127,11 +120,11 @@ JobTrend_standard(datHistory, "Â¾°È¤pÃþ¦WºÙ", "area.work", filename)
 ###################################################
 ###################################################
 
-##Resume: Supply
-##Import all files.
+#' Resume: Supply
+#' Import all files.
 files <- list.files(file.path("per.month", "¨DÂ¾"), full.names = TRUE)
 files <- files[grepl(".csv", files, fixed=TRUE)]
-##Import files
+
 files.lists <- pblapply(files,function(file.name){
   file.list <- fread(file.name)
   date <- unlist(strsplit(file.name, "/"))[length(unlist(strsplit(file.name, "/")))] %>% gsub("[A-z.]", "", .) ##%>% substr(., 1, 7)
@@ -140,7 +133,7 @@ files.lists <- pblapply(files,function(file.name){
   return(file.list)
 })
 
-##Combine all the lists into data frame.
+#' Combine all the lists into data frame.
 totalResumeData <- do.call(rbind,files.lists)
 rm(files.lists,files)
 dim(totalResumeData)
@@ -150,7 +143,7 @@ names(totalResumeData)
 totalResumeData$§Æ±æ¤u§@©Ê½è %>% table
 totalResumeData <- totalResumeData[§Æ±æ¤u§@©Ê½è=="¥þÂ¾" | §Æ±æ¤u§@©Ê½è=="¤¤°ª¶¥",]
 
-###Expect working area transferation
+#' Expect working area transferation
 totalResumeData$area.work <- ""
 totalResumeData[ substr(totalResumeData[,§Æ±æ¤W¯Z¦a°Ï¦WºÙ],1,2) %in% North, area.work:="¥_³¡¦a°Ï"]
 totalResumeData[ substr(totalResumeData[,§Æ±æ¤W¯Z¦a°Ï¦WºÙ],1,2) %in% Mid, area.work:="¤¤³¡¦a°Ï"]
@@ -158,7 +151,7 @@ totalResumeData[ substr(totalResumeData[,§Æ±æ¤W¯Z¦a°Ï¦WºÙ],1,2) %in% South, area
 totalResumeData[ substr(totalResumeData[,§Æ±æ¤W¯Z¦a°Ï¦WºÙ],1,2) %in% East, area.work:="ªF³¡»PÂ÷®q¦a°Ï"]
 totalResumeData[ !(substr(totalResumeData[,§Æ±æ¤W¯Z¦a°Ï¦WºÙ],1,2) %in% Out) , area.work:="«D¥xÆW¦a°Ï"]
 
-###Living area transferation
+#' Living area transferation
 totalResumeData$area.live <- ""
 totalResumeData[ substr(totalResumeData[,©~¦í¦a°Ï],1,2) %in% North, area.live:="¥_³¡¦a°Ï"]
 totalResumeData[ substr(totalResumeData[,©~¦í¦a°Ï],1,2) %in% Mid, area.live:="¤¤³¡¦a°Ï"]
@@ -167,10 +160,10 @@ totalResumeData[ substr(totalResumeData[,©~¦í¦a°Ï],1,2) %in% East, area.live:="ª
 totalResumeData[ !(substr(totalResumeData[,©~¦í¦a°Ï],1,2) %in% Out) , area.live:="«D¥xÆW¦a°Ï"]
 
 unique(totalResumeData$area.work)
-## Check areas which are outside Taiwan
+#' Check areas which are outside Taiwan
 totalResumeData[ area.work=="«D¥xÆW¦a°Ï" , §Æ±æ¤W¯Z¦a°Ï¦WºÙ] %>% substr(., 1, 3) %>% table
 
-##Country
+#' Country
 totalResumeData$country.work <- totalResumeData$§Æ±æ¤W¯Z¦a°Ï¦WºÙ %>% substr(., 1, 3)
 totalResumeData[ !(substr(totalResumeData[, country.work],1,2) %in% Out) , country.work:="«D¥xÆW¦a°Ï"]
 
@@ -181,11 +174,11 @@ totalResumeData$date %>% unique
 totalResumeData$date <- totalResumeData$date %>% substr(., 1, 5)
 totalResumeData$date <- as.integer(totalResumeData$date)
 totalResumeData$date <- totalResumeData$date - 1
-## 10600 => 10512
+#' 10600 => 10512
 totalResumeData$date[grepl("00$", totalResumeData$date)] <- totalResumeData$date[grepl("00$", totalResumeData$date)] - 100 + 12
 gc()
 
-##Grouped by Department
+#' Grouped by Department
 dpt.match <- read.csv("1111¾Ç¸s¾Çªù¾ÇÃþ-20160617-1.csv", stringsAsFactors=F)
 
 for(i in 1:ncol(dpt.match)){
@@ -196,8 +189,7 @@ for(i in 1:nrow(dpt.match)){
   totalResumeData$dpt[which(totalResumeData$³Ì°ª¾Ç¾ú_¬ì¨t¤pÃþ¦WºÙ==dpt.match[i,3])] <- dpt.match[i,2]
 }
 
-##Encoding problem
-#EncodingCheck(dpt.match)
+#'Encoding problem
 EncodingCheck(totalResumeData)
 
 setDT(totalResumeData)
@@ -208,21 +200,10 @@ for(i in 1:ncol(totalResumeData)){
     totalResumeData[[i]] <- totalResumeData[[i]] %>% iconv("UTF-8")
   }
 }
-#[1] 1  4  7  9 11  13 15  18  21  26
 
 ########################################
 ###Top25 Job wanted, grouped by area...
 ########################################
-#tmp <- JobTrend_unitHistory(totalResumeData, "§Æ±æÂ¾°È¤pÃþ¦WºÙ", "area.work")
-#tmp <- FillMissingJobRow(tmp, "§Æ±æÂ¾°È¤pÃþ¦WºÙ", "area.work")
-#tmp[, percentage:=N/sum(N), by=c("date", "area.work")]
-#tmp$date %>% unique
-#tmp$date <- as.numeric(tmp$date)
-#tmp$percentage[is.nan(tmp$percentage)] <- 0
-## Get standard hitorical data...
-## Export
-#filename <- "AreaJobWanted"
-#JobTrend_standard(tmp, "§Æ±æÂ¾°È¤pÃþ¦WºÙ", "area.work", filename)
 JobTrend(totalResumeData, "§Æ±æÂ¾°È¤pÃþ¦WºÙ", "area.work", "AreaJobWanted")
 
 ########################################
